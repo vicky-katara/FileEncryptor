@@ -5,7 +5,18 @@
  */
 package encrypterFrontEnd;
 import commonComponents.CustomDialog;
+import cryptoUtil.CryptoUtil;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import javax.swing.JFileChooser;
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Iterator;
 /**
  *
  * @author Vicky Katara
@@ -35,6 +46,7 @@ public class MainScreen extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         passwordField = new javax.swing.JPasswordField();
         EncryptButton = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -71,6 +83,13 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
+        jButton1.setText("Close");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -87,15 +106,16 @@ public class MainScreen extends javax.swing.JFrame {
                             .addComponent(jLabel3))
                         .addGap(43, 43, 43)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(filePathTextField)
-                            .addComponent(passwordField, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(EncryptButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 90, Short.MAX_VALUE)
+                                .addComponent(jButton1))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(filePathTextField)
+                                .addComponent(passwordField, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(browseButton)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(EncryptButton)
-                .addGap(159, 159, 159))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -111,9 +131,11 @@ public class MainScreen extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(passwordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(EncryptButton)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(EncryptButton)
+                    .addComponent(jButton1))
+                .addGap(38, 38, 38))
         );
 
         pack();
@@ -135,15 +157,64 @@ public class MainScreen extends javax.swing.JFrame {
         if(passwordField.getPassword().length<6){
             CustomDialog.main(new String[]{"Password must be 6 characters of more"});
         }
-        
+        ArrayList<String> encryptedLines = encryptStream(getStreamFromFile(filePathTextField.getText()));
+        System.out.println(encryptedLines);
+        String originalFilePath = filePathTextField.getText();
+        String encFilePath;
+        if(originalFilePath.lastIndexOf(File.pathSeparator)<originalFilePath.lastIndexOf("."))// something/fil.txt
+            encFilePath = originalFilePath.substring(0, originalFilePath.lastIndexOf("."))+"-encrypted"+originalFilePath.substring(originalFilePath.lastIndexOf("."), originalFilePath.length());
+        else // C://FIle/fil
+            encFilePath = originalFilePath+"-encrypted";
+        writeToFile(encFilePath, encryptedLines);
     }//GEN-LAST:event_EncryptButtonActionPerformed
 
+    ArrayList<String> encryptStream(Iterator<String> inputIterator){
+        CryptoUtil cryptoUtil=new CryptoUtil();
+        String key=new String(passwordField.getPassword());
+        ArrayList<String> encryptedLines = new ArrayList<String>();
+        try{
+            while(inputIterator.hasNext())
+                encryptedLines.add(cryptoUtil.encrypt(key, inputIterator.next()));
+        }
+        catch(Exception e){e.printStackTrace();}
+        return encryptedLines;
+    }
+    
+    Iterator<String> getStreamFromFile(String filePath){
+        try{
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
+            return br.lines().iterator();
+        }
+        catch(FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+        }
+        catch(IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return null;
+    }
+    
+    void writeToFile(String filePath, ArrayList<String> encryptedLines){
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
+            for(String line:encryptedLines)
+                bw.write(line);
+            bw.close();
+        }
+        catch(IOException ioe){ioe.printStackTrace();}
+    }
+    
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
         // TODO add your handling code here:
         JFileChooser fileChooser = new JFileChooser();
         if( fileChooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION )
             filePathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
     }//GEN-LAST:event_browseButtonActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -185,6 +256,7 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JButton EncryptButton;
     private javax.swing.JButton browseButton;
     private javax.swing.JTextField filePathTextField;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
