@@ -76,7 +76,7 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        DecryptButton.setText("Decryptor");
+        DecryptButton.setText("Decrypt");
         DecryptButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DecryptButtonActionPerformed(evt);
@@ -116,7 +116,7 @@ public class MainScreen extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(DecryptButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 90, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 100, Short.MAX_VALUE)
                                 .addComponent(jButton1))
                             .addComponent(filePathTextField)
                             .addComponent(passwordField, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
