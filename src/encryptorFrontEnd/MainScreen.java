@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package encrypterFrontEnd;
+package encryptorFrontEnd;
 import commonComponents.CustomDialog;
 import cryptoUtil.CryptoUtil;
 import java.io.BufferedReader;
@@ -15,8 +15,17 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 /**
  *
  * @author Vicky Katara
@@ -47,6 +56,7 @@ public class MainScreen extends javax.swing.JFrame {
         passwordField = new javax.swing.JPasswordField();
         EncryptButton = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
+        backButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -90,17 +100,25 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
+        backButton.setText("< Main");
+        backButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(135, 135, 135)
+                        .addComponent(backButton)
+                        .addGap(82, 82, 82)
                         .addComponent(jLabel2))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(jLabel3))
@@ -110,9 +128,8 @@ public class MainScreen extends javax.swing.JFrame {
                                 .addComponent(EncryptButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 90, Short.MAX_VALUE)
                                 .addComponent(jButton1))
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(filePathTextField)
-                                .addComponent(passwordField, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)))
+                            .addComponent(filePathTextField)
+                            .addComponent(passwordField, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(browseButton)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -121,7 +138,9 @@ public class MainScreen extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel2)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(backButton)
+                    .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -131,7 +150,7 @@ public class MainScreen extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(passwordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(EncryptButton)
                     .addComponent(jButton1))
@@ -157,7 +176,7 @@ public class MainScreen extends javax.swing.JFrame {
         if(passwordField.getPassword().length<6){
             CustomDialog.main(new String[]{"Password must be 6 characters of more"});
         }
-        ArrayList<String> encryptedLines = encryptStream(getStreamFromFile(filePathTextField.getText()));
+        ArrayList<byte[]> encryptedLines = encryptStream(getStreamFromFile(filePathTextField.getText()));
         System.out.println(encryptedLines);
         String originalFilePath = filePathTextField.getText();
         String encFilePath;
@@ -168,15 +187,15 @@ public class MainScreen extends javax.swing.JFrame {
         writeToFile(encFilePath, encryptedLines);
     }//GEN-LAST:event_EncryptButtonActionPerformed
 
-    ArrayList<String> encryptStream(Iterator<String> inputIterator){
+    ArrayList<byte[]> encryptStream(Iterator<String> inputIterator){
         CryptoUtil cryptoUtil=new CryptoUtil();
         String key=new String(passwordField.getPassword());
-        ArrayList<String> encryptedLines = new ArrayList<String>();
+        ArrayList<byte[]> encryptedLines = new ArrayList<byte[]>();
         try{
             while(inputIterator.hasNext())
-                encryptedLines.add(cryptoUtil.encrypt(key, inputIterator.next()));
+                encryptedLines.add(cryptoUtil.encrypt_n(key, inputIterator.next()));
         }
-        catch(Exception e){e.printStackTrace();}
+        catch(NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | UnsupportedEncodingException | IllegalBlockSizeException | BadPaddingException e){e.printStackTrace();}
         return encryptedLines;
     }
     
@@ -194,11 +213,11 @@ public class MainScreen extends javax.swing.JFrame {
         return null;
     }
     
-    void writeToFile(String filePath, ArrayList<String> encryptedLines){
+    void writeToFile(String filePath, ArrayList<byte[]> encryptedLines){
         try{
             BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
-            for(String line:encryptedLines)
-                bw.write(line);
+            for(byte[] line:encryptedLines)
+                bw.write(Arrays.toString(line)+"\n");
             bw.close();
         }
         catch(IOException ioe){ioe.printStackTrace();}
@@ -215,6 +234,11 @@ public class MainScreen extends javax.swing.JFrame {
         // TODO add your handling code here:
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void backButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backButtonActionPerformed
+        commonComponents.MainFrontEnd.main(null);
+        this.dispose();
+    }//GEN-LAST:event_backButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -254,6 +278,7 @@ public class MainScreen extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton EncryptButton;
+    private javax.swing.JButton backButton;
     private javax.swing.JButton browseButton;
     private javax.swing.JTextField filePathTextField;
     private javax.swing.JButton jButton1;
